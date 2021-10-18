@@ -335,7 +335,9 @@ def createCarScene(pipeline):
     wheel4Node.childs += [rotatingWheelNode]
 
     car1 = sg.SceneGraphNode('car1')
-    car1.transform = tr.matmul([tr.translate(2.0, -0.037409, 5.0), tr.rotationY(np.pi)])
+    #tr.translate(2.0, -0.037409, 5.0)
+    #, tr.rotationY(np.pi)
+    car1.transform = tr.matmul([tr.translate(0, 0, 0)])
     car1.childs += [chasisNode]
     car1.childs += [wheel1Node]
     car1.childs += [wheel2Node]
@@ -462,6 +464,37 @@ if __name__ == "__main__":
     # glfw will swap buffers as soon as possible
     glfw.swap_interval(0)
 
+
+    # ===========================================================
+    # Variables globales
+    # =========
+
+    
+
+    # Variables globales para almacenar la posición del auto y determinar las transformaciones a aplicar para la cámara
+    # tr.translate(2.0, -0.037409, 5.0)
+    car_X = 2.0
+    car_Y = -0.037409
+    car_Z = 5.0
+    car_theta = 0
+
+    cam_X = 0
+    cam_Y = 0
+    cam_Z = 0
+
+    # Propiedades ajustables
+    CAMERA_ANGULAR_SPEED = 2.5
+    CAR_SPEED = 4
+    camera_height = 0.75
+    cam_radius = 2
+    cam_angle = 0
+    cam_fangle = 0
+
+
+    # =========
+
+    t0 = glfw.get_time()
+
     while not glfw.window_should_close(window):
 
         # Measuring performance
@@ -470,6 +503,55 @@ if __name__ == "__main__":
 
         # Using GLFW to check for input events
         glfw.poll_events()
+
+        # <===== Controlador =======>
+        # TODO: considerar el delta_time de cuando el interprete se salta frames.
+        t1 = glfw.get_time()
+        dt = t1 - t0
+        t0 = t1 
+
+
+        # Rotar el auto (y la cámara)
+        if (glfw.get_key(window, glfw.KEY_LEFT) == glfw.PRESS):
+            car_theta += dt*CAMERA_ANGULAR_SPEED
+        if (glfw.get_key(window, glfw.KEY_RIGHT) == glfw.PRESS):
+            car_theta -= dt*CAMERA_ANGULAR_SPEED
+        
+        # Avanzar y retroceder
+        if (glfw.get_key(window, glfw.KEY_UP) == glfw.PRESS):
+            car_X += dt*CAR_SPEED*np.sin(car_theta)
+            car_Z += dt*CAR_SPEED*np.cos(car_theta)
+            
+        if (glfw.get_key(window, glfw.KEY_DOWN) == glfw.PRESS):
+            car_X -= dt*CAR_SPEED*np.sin(car_theta)
+            car_Z -= dt*CAR_SPEED*np.cos(car_theta)
+            
+        car.transform = tr.matmul([tr.translate(car_X,car_Y,car_Z), tr.rotationY(car_theta)])
+        # Actualizar la cámara
+        fixed_car_X = car_X
+        fixed_car_Y = car_Y
+        fixed_car_Z = car_Z
+        cam_angle = car_theta+np.pi
+
+        # Efecto de suavizado de movimiento de cámara
+        if cam_fangle != cam_angle:
+            cam_fangle += dt*7.5*(cam_angle-cam_fangle)
+
+        cam_X = car_X + (cam_radius * np.sin(cam_fangle))
+        cam_Z = car_Z + (cam_radius * np.cos(cam_fangle))
+        cam_Y = car_Y + camera_height
+        # at = np.array([viewPos[0], 0, viewPos[2]])
+        # at = np.array([fixed_car_X-viewPos[0],fixed_car_Y-viewPos[1],fixed_car_Z-viewPos[2]]) # /np.linalg.norm(np.array([car_X-viewPos[0],car_Y-viewPos[1],car_Z-viewPos[2]]))
+        controller.viewPos = np.array([cam_X,cam_Y,cam_Z])
+        controller.at = np.array([car_X, car_Y, car_Z])
+        up = np.array([0,1,0])
+
+        # view = tr.lookAt(viewPos,at,up)
+
+        # controller.viewPos = viewPos
+        # controller.at = at
+
+        # <===== Controlador =======>
 
         # Clearing the screen in both, color and depth
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
