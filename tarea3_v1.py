@@ -1,6 +1,7 @@
 # coding=utf-8
 """Tarea 3"""
 
+from Auto import Auto
 import glfw
 from OpenGL.GL import *
 import OpenGL.GL.shaders
@@ -14,6 +15,7 @@ import grafica.scene_graph as sg
 import grafica.easy_shaders as es
 import grafica.lighting_shaders as ls
 import grafica.performance_monitor as pm
+import grafica.text_renderer as tx
 from grafica.assets_path import getAssetPath
 from operator import add
 
@@ -121,7 +123,6 @@ def on_key(window, key, scancode, action, mods):
     elif key == glfw.KEY_7:
         controller.viewPos = np.array([-controller.distance,controller.distance,controller.distance]) #Vista diagonal 2
         controller.camUp = np.array([0,1,0])
-    
     else:
         print('Unknown key')
 
@@ -296,14 +297,105 @@ def createTiledFloor(dim):
 # Esta función recibe como parámetro el pipeline que se usa para las texturas (texPipeline)
 
 def createHouse(pipeline):
-    pass
+    gpuMuro = createGPUShape(pipeline, bs.createTextureQuad(1,1))
+    gpuMuro.texture = es.textureSimpleSetup(getAssetPath('wall1.jpg'), GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR)
+    gpuTecho = createGPUShape(pipeline, bs.createTextureQuad(1,1))
+    gpuTecho.texture = es.textureSimpleSetup(getAssetPath('roof2.jpg'), GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR)
+    
+    muro1 = sg.SceneGraphNode('muro1')
+    muro1.transform = tr.translate(0,0,0.5)
+    muro1.childs += [gpuMuro]
+
+    muro2 = sg.SceneGraphNode('muro2')
+    muro2.transform = tr.translate(0,0,-0.5)
+    muro2.childs += [gpuMuro]
+
+    muro3 = sg.SceneGraphNode('muro3')
+    muro3.transform = tr.matmul([tr.translate(0.5,0,0),tr.rotationY(np.pi/2)])
+    muro3.childs += [gpuMuro]
+
+    muro4 = sg.SceneGraphNode('muro4')
+    muro4.transform = tr.matmul([tr.translate(-0.5,0,0),tr.rotationY(np.pi/2)])
+    muro4.childs += [gpuMuro]
+
+    techo = sg.SceneGraphNode('techo')
+    techo.transform = tr.matmul([tr.translate(0,0.5,0),tr.rotationX(np.pi/2)])
+    techo.childs += [gpuTecho]
+
+    house = sg.SceneGraphNode('casa')
+    # house.transform = tr.matmul([tr.translate(0,0.25,0),tr.uniformScale(0.5)])
+    house.childs += [muro1,muro2,muro3,muro4,techo]
+    
+
+    casas = []
+    # Tuplas:_ (X,Z,ROTACIÓN)
+    posiciones = [(4,3,np.pi*0.25), (-4,3,np.pi*0.33), (0,-8,np.pi*0.66), (0,9,np.pi*0.76), (4.6,-13,np.pi*0.66),(-3.8,-11,np.pi*0.66),
+    (-6.4,-9,np.pi*0.89),(6.8,-9,np.pi*0.13),(6.8,9,np.pi*0.45),(-7,-9,np.pi*0.89),(7,-3,2.94),(3.35,-6.93,3.8), (-4.63,-4.36,5.47),
+    (-5.11,-0.34,6.43),(-4.64,6.06,6.77),(-2.89,11.08,6.21),(3.44,6.98,8.56),(6.46,-0.42,-2.75),(9.08,4.51,0.93),(-0.62,0.14,-2.58),
+    (0.25,4.70,5.38),(0.05,-4.76,3.41)]
+
+    for x,z,r in posiciones:
+        casa = sg.SceneGraphNode('instancia')
+        casa.transform = tr.matmul([tr.translate(x,0.35,z),tr.rotationY(r),tr.uniformScale(0.75)])
+        casa.childs += [house]
+        casas.append(casa)
+
+
+
+    system = sg.SceneGraphNode('system')
+    system.childs = casas
+
+    return system
 
 # TAREA3: Implementa la función "createWall" que crea un objeto que representa un muro
 # y devuelve un nodo de un grafo de escena (un objeto sg.SceneGraphNode) que representa toda la geometría y las texturas
 # Esta función recibe como parámetro el pipeline que se usa para las texturas (texPipeline)
-
 def createWall(pipeline):
-    pass
+    gpuMuro = createGPUShape(pipeline, bs.createTextureQuad(10,0.5))
+    gpuMuro.texture = es.textureSimpleSetup(getAssetPath('wall3.jpg'), GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR)
+    
+    gpuMuro_small = createGPUShape(pipeline, bs.createTextureQuad(0.5,0.5))
+    gpuMuro_small.texture = es.textureSimpleSetup(getAssetPath('wall3.jpg'), GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR)
+
+    gpuMuro_smallR = createGPUShape(pipeline, bs.createTextureQuad(2.5,0.1))
+    gpuMuro_smallR.texture = es.textureSimpleSetup(getAssetPath('wall3.jpg'), GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR)
+
+    muro1 = sg.SceneGraphNode('muro1')
+    muro1.transform = tr.translate(0,0,0.1)
+    muro1.childs += [gpuMuro]
+
+    muro2 = sg.SceneGraphNode('muro2')
+    muro2.transform = tr.translate(0,0,-0.1)
+    muro2.childs += [gpuMuro]
+
+    muro3 = sg.SceneGraphNode('muro3')
+    muro3.transform = tr.matmul([tr.translate(0.5,0,0),tr.scale(1,1,0.2),tr.rotationY(np.pi/2)])
+    muro3.childs += [gpuMuro_small]
+
+    muro4 = sg.SceneGraphNode('muro3')
+    muro4.transform = tr.matmul([tr.translate(-0.5,0,0),tr.scale(1,1,0.2),tr.rotationY(np.pi/2)])
+    muro4.childs += [gpuMuro_small]
+
+    techo = sg.SceneGraphNode('techo')
+    techo.transform = tr.matmul([tr.translate(0,0.5,0),tr.scale(1,1,0.2),tr.rotationX(np.pi/2)])
+    techo.childs += [gpuMuro_smallR]
+
+    contencion = sg.SceneGraphNode('contencion')
+    contencion.transform = tr.matmul([tr.translate(2.6,0.2,0.5), tr.rotationY(np.pi/2), tr.scale(10,0.4,1)])
+    contencion.childs += [muro1,muro2,muro3,muro4,techo]
+    
+    copia1 = sg.SceneGraphNode('copia1')
+    copia1.transform = tr.translate(-1.2,0,0)
+    copia1.childs += [contencion]
+
+    copia2 = sg.SceneGraphNode('copia2')
+    copia2.transform = tr.translate(-4,0,0)
+    copia2.childs += [copia1,contencion]
+
+    system = sg.SceneGraphNode('system')
+    system.childs += [contencion,copia1,copia2]
+
+    return system
 
 # TAREA3: Esta función crea un grafo de escena especial para el auto.
 def createCarScene(pipeline):
@@ -376,7 +468,7 @@ def createStaticScene(pipeline):
     arcNode.childs += [arcShape]
 
     sandNode = sg.SceneGraphNode('sand')
-    sandNode.transform = tr.translate(0.0,-0.1,0.0)
+    sandNode.transform = tr.translate(0.0,-0.01,0.0)
     sandNode.childs += [sandBaseShape]
 
     linearSector = sg.SceneGraphNode('linearSector')
@@ -436,6 +528,7 @@ if __name__ == "__main__":
     axisPipeline = es.SimpleModelViewProjectionShaderProgram()
     texPipeline = es.SimpleTextureModelViewProjectionShaderProgram()
     lightPipeline = ls.SimpleGouraudShaderProgram()
+    textPipeline = tx.TextureTextRendererShaderProgram()
     
     # Telling OpenGL to use our shader program
     glUseProgram(axisPipeline.shaderProgram)
@@ -456,10 +549,28 @@ if __name__ == "__main__":
     #NOTA: Aqui creas un objeto con tu escena
     dibujo = createStaticScene(texPipeline)
     car =createCarScene(lightPipeline)
+    casa = createHouse(texPipeline)
+    
+    
+    # --- GRAFO DE ESCENA PARA LOS MUROS ---
+    muros = createWall(texPipeline)
+
+    
 
     setPlot(texPipeline, axisPipeline,lightPipeline)
 
     perfMonitor = pm.PerformanceMonitor(glfw.get_time(), 0.5)
+    
+    # ============ Velocímetro =============
+    textTexture = tx.generateTextBitsTexture()
+    gpuTexture = tx.toOpenGLTexture(textTexture)
+    gpuSpeedometer = es.GPUShape().initBuffers()
+    speedShape = tx.textToShape("0.0 mph",0.05,0.05)
+    textPipeline.setupVAO(gpuSpeedometer)
+    gpuSpeedometer.fillBuffers(speedShape.vertices, speedShape.indices, GL_STREAM_DRAW)
+    gpuSpeedometer.texture = gpuTexture
+
+
 
     # glfw will swap buffers as soon as possible
     glfw.swap_interval(0)
@@ -467,29 +578,25 @@ if __name__ == "__main__":
 
     # ===========================================================
     # Variables globales
-    # =========
-
-    
+    # ===========================================================
 
     # Variables globales para almacenar la posición del auto y determinar las transformaciones a aplicar para la cámara
-    # tr.translate(2.0, -0.037409, 5.0)
-    car_X = 2.0
-    car_Y = -0.037409
-    car_Z = 5.0
+    auto = Auto(2.0, -0.037409, 5.0)
+
+    auto_X = 2.0
+    auto_Y = -0.037409
+    auto_Z = 5.0
     car_theta = 0
 
     cam_X = 0
     cam_Y = 0
     cam_Z = 0
 
-    # Propiedades ajustables
-    CAMERA_ANGULAR_SPEED = 2.5
-    CAR_SPEED = 4
+    # <======= Propiedades ajustables ========>
     camera_height = 0.75
     cam_radius = 2
     cam_angle = 0
     cam_fangle = 0
-
 
     # =========
 
@@ -505,51 +612,57 @@ if __name__ == "__main__":
         glfw.poll_events()
 
         # <===== Controlador =======>
-        # TODO: considerar el delta_time de cuando el interprete se salta frames.
         t1 = glfw.get_time()
         dt = t1 - t0
         t0 = t1 
 
-
-        # Rotar el auto (y la cámara)
-        if (glfw.get_key(window, glfw.KEY_LEFT) == glfw.PRESS):
-            car_theta += dt*CAMERA_ANGULAR_SPEED
-        if (glfw.get_key(window, glfw.KEY_RIGHT) == glfw.PRESS):
-            car_theta -= dt*CAMERA_ANGULAR_SPEED
+        # <============ Input: maniobrar (rotar) ===============>
+        auto.steer(0)
+        if (glfw.get_key(window, glfw.KEY_A) == glfw.PRESS):
+            auto.steer(1)
+        if (glfw.get_key(window, glfw.KEY_D) == glfw.PRESS):
+            auto.steer(-1)
         
-        # Avanzar y retroceder
-        if (glfw.get_key(window, glfw.KEY_UP) == glfw.PRESS):
-            car_X += dt*CAR_SPEED*np.sin(car_theta)
-            car_Z += dt*CAR_SPEED*np.cos(car_theta)
+        #  <================= Input: acelerar ==================>
+        pressed = False
+        if (glfw.get_key(window, glfw.KEY_W) == glfw.PRESS):
+            auto.accelerate(1)
+            pressed = True
             
-        if (glfw.get_key(window, glfw.KEY_DOWN) == glfw.PRESS):
-            car_X -= dt*CAR_SPEED*np.sin(car_theta)
-            car_Z -= dt*CAR_SPEED*np.cos(car_theta)
-            
-        car.transform = tr.matmul([tr.translate(car_X,car_Y,car_Z), tr.rotationY(car_theta)])
-        # Actualizar la cámara
-        fixed_car_X = car_X
-        fixed_car_Y = car_Y
-        fixed_car_Z = car_Z
-        cam_angle = car_theta+np.pi
+        if (glfw.get_key(window, glfw.KEY_S) == glfw.PRESS):
+            auto.accelerate(-1)
+            pressed = True
+        
+        if not pressed:
+            auto.accelerate(0)
 
+        auto.step(dt)
+    
+        car.transform = tr.matmul([tr.translate(auto.X,auto.Y,auto.Z), tr.rotationY(auto.direction)])
+        
         # Efecto de suavizado de movimiento de cámara
+        # [Adicional]
+        cam_angle = auto.direction+np.pi
+
+        # <===== Input: presionar botón C para ver en reversa =======>
+        # [Adicional]
+        if (glfw.get_key(window, glfw.KEY_F) == glfw.PRESS):
+            cam_angle = auto.direction
+
+        if (glfw.get_key(window, glfw.KEY_G) == glfw.PRESS):
+            print(f"{auto.X} {auto.Z} {auto.direction}")
+        
+        # <=========== Suavizado de cámara =============>
         if cam_fangle != cam_angle:
             cam_fangle += dt*7.5*(cam_angle-cam_fangle)
 
-        cam_X = car_X + (cam_radius * np.sin(cam_fangle))
-        cam_Z = car_Z + (cam_radius * np.cos(cam_fangle))
-        cam_Y = car_Y + camera_height
-        # at = np.array([viewPos[0], 0, viewPos[2]])
-        # at = np.array([fixed_car_X-viewPos[0],fixed_car_Y-viewPos[1],fixed_car_Z-viewPos[2]]) # /np.linalg.norm(np.array([car_X-viewPos[0],car_Y-viewPos[1],car_Z-viewPos[2]]))
+        cam_X = auto.X + (cam_radius * np.sin(cam_fangle))
+        cam_Z = auto.Z + (cam_radius * np.cos(cam_fangle))
+        cam_Y = auto.Y + camera_height
+        
         controller.viewPos = np.array([cam_X,cam_Y,cam_Z])
-        controller.at = np.array([car_X, car_Y, car_Z])
+        controller.at = np.array([auto.X, auto.Y, auto.Z])
         up = np.array([0,1,0])
-
-        # view = tr.lookAt(viewPos,at,up)
-
-        # controller.viewPos = viewPos
-        # controller.at = at
 
         # <===== Controlador =======>
 
@@ -572,17 +685,43 @@ if __name__ == "__main__":
         #NOTA: Aquí dibujas tu objeto de escena
         glUseProgram(texPipeline.shaderProgram)
         sg.drawSceneGraphNode(dibujo, texPipeline, "model")
+        sg.drawSceneGraphNode(casa, texPipeline, "model")
+        sg.drawSceneGraphNode(muros, texPipeline, "model")
+
 
         glUseProgram(lightPipeline.shaderProgram)
         sg.drawSceneGraphNode(car, lightPipeline, "model")
-
         
+        
+        color = [1.0,1.0,1.0]
+        speedometer_value = abs(round(auto.speed,1))
+
+        # <=== Efecto de vibración cuando la velocidad es mucha ===>
+        # [Adicional]
+        offsets = [(np.random.rand()*2) - 1,(np.random.rand()*2) - 1]
+        shakeMag = 0
+        if speedometer_value > 5:
+            shakeMag = (speedometer_value-5)*0.02
+
+        # [Adicional]
+        # < ==== Velocímetro ==== >
+        speedShape = tx.textToShape(f"{speedometer_value} mph",0.1,0.1)
+        gpuSpeedometer.fillBuffers(speedShape.vertices, speedShape.indices, GL_STREAM_DRAW)
+        gpuSpeedometer.texture = gpuTexture
+
+        glUseProgram(textPipeline.shaderProgram)
+        glUniform4f(glGetUniformLocation(textPipeline.shaderProgram, "fontColor"), color[0], color[1], color[2], 1.0)
+        glUniform4f(glGetUniformLocation(textPipeline.shaderProgram, "backColor"), 1-color[0], 1-color[1], 1-color[2],0)
+        glUniformMatrix4fv(glGetUniformLocation(textPipeline.shaderProgram, "transform"), 1, GL_TRUE,
+            tr.translate(-0.9 + shakeMag*offsets[0], -0.9 + shakeMag*offsets[1], 0))
+        textPipeline.drawCall(gpuSpeedometer)
 
         # Once the render is done, buffers are swapped, showing only the complete scene.
         glfw.swap_buffers(window)
 
     # freeing GPU memory
     gpuAxis.clear()
+    gpuSpeedometer.clear()
     dibujo.clear()
     
 
