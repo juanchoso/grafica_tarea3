@@ -644,15 +644,13 @@ if __name__ == "__main__":
         # [Adicional]
         cam_angle = auto.direction+np.pi
 
-        # <===== Input: presionar botón C para ver en reversa =======>
+        # <===== Input: presionar botón F para ver en reversa =======>
         # [Adicional]
         if (glfw.get_key(window, glfw.KEY_F) == glfw.PRESS):
             cam_angle = auto.direction
-
-        if (glfw.get_key(window, glfw.KEY_G) == glfw.PRESS):
-            print(f"{auto.X} {auto.Z} {auto.direction}")
         
         # <=========== Suavizado de cámara =============>
+        # [Adicional]
         if cam_fangle != cam_angle:
             cam_fangle += dt*7.5*(cam_angle-cam_fangle)
 
@@ -696,7 +694,7 @@ if __name__ == "__main__":
         color = [1.0,1.0,1.0]
         speedometer_value = abs(round(auto.speed,1))
 
-        # <=== Efecto de vibración cuando la velocidad es mucha ===>
+        # <=== Efecto de vibración en el velocímetro cuando la velocidad es mucha ===>
         # [Adicional]
         offsets = [(np.random.rand()*2) - 1,(np.random.rand()*2) - 1]
         shakeMag = 0

@@ -11,21 +11,21 @@ __license__ = "MIT"
 
 import numpy as np
 
-
+# [Adicional]
 class Auto:
     def __init__(self,X: float,Y: float,Z: float) -> None:
-        self.MAX_SPEED = 6
-        self.CAR_ACCELERATION = 3
-        self.CAR_ROTATION_SPEED = 2.5
-        self.CAR_FRICTION = 1.5
+        self.MAX_SPEED = 6                  # Velocidad máxima que permitiremos alcanzar al auto
+        self.CAR_ACCELERATION = 3           # Poder de aceleración del auto, mientras mayor el valor más rápido se acelerará
+        self.CAR_ROTATION_SPEED = 2.5       # Poder de rotación del auto, mientras mayor el valor más rápido se rotará
+        self.CAR_FRICTION = 1.5             # Fricción del auto, esto  controla que tan rápido decrece la velocidad al no acelerar.
         self.X = X
         self.Y = Y
         self.Z = Z 
         self.direction = 0
         self.speed = 0
 
-        self.acceleration = 0
-        self.steering = 0
+        self.acceleration = 0               # Variable para recibir el input del acelerador
+        self.steering = 0                   # Variable para recibir el input del manubrio
 
     def accelerate(self,direction):
         """Método para pisar el acelerador del vehículo"""
